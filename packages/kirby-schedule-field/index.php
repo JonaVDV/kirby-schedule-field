@@ -3,6 +3,10 @@
 use Kirby\Data\Yaml;
 use Kirby\Cms\App as Kirby;
 use Kirby\Filesystem\F;
+use Kirby\Form\Form;
+use Kirby\Exception\InvalidArgumentException;
+use Kirby\Toolkit\A;
+use Kirby\Toolkit\Str;
 
 load([
     'IMA\\KirbyScheduleField\\Methods\\FieldMethods' => __DIR__ . '/methods/fieldMethods.php',
@@ -29,10 +33,44 @@ Kirby::plugin('IMA/kirby-schedule-field', [
                         ];
                     }
                 },
-                'fields' => function ($fields = []) {
+                'create' => function (array $fields = []) {
                     return $fields;
                 }
             ],
+            'methods' => [
+                'form' => function (array $values = []) {
+                    return new Form([
+                        'fields' => $this->attrs['create'] ?? [],
+                        'values' => $values,
+                        'model'  => $this->model
+                    ]);
+                },
+            ],
+            'validations' => [
+                'schedule' => function ($value) {
+                    if (empty($value['items']) === true) {
+                        return true;
+                    }
+                    $values = A::wrap($value['items']);
+                    foreach ($values as $index => $value) {
+                        $form = $this->form($value);
+
+                        foreach ($form->fields() as $field) {
+                            $errors = $field->errors();
+                            if (empty($errors) === false) {
+
+                                throw new InvalidArgumentException([
+                                    'key'  => 'structure.validation',
+                                    'data' => [
+                                        'field' => $field->label() ?? Str::ucfirst($field->name()),
+                                        'index' => $index + 1
+                                    ]
+                                ]);
+                            }
+                        }
+                    }
+                }
+            ]
         ]
     ],
     'translations' => [

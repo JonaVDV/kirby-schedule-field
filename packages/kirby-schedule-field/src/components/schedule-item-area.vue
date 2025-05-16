@@ -6,7 +6,7 @@
         @add-items="saveItem"
         @edit-items="editItem"
         :items="items"
-        :fields="fields"
+        :fields="create"
         :endpoints="endpoints"
       />
     </div>
@@ -102,7 +102,7 @@ export default defineComponent({
       type: Number,
       default: 22,
     },
-    fields: {
+    create: {
       /**
        * @type {import('vue').PropType<createProps>}
        */

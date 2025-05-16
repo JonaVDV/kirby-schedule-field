@@ -4,3 +4,19 @@ fields:
   schedule:
     type: schedule
     label: Schedule
+    create:
+      title:
+        type: text
+        label: Title
+        required: true
+      location:
+        type: select
+        label: Location
+        default: derby
+        options:
+          derby: "Derby's Dojo"
+          brink: "De brink"
+      teacher:
+        type: users
+        label: Teacher
+        required: true
