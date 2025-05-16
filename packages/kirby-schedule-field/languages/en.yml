@@ -1,0 +1,37 @@
+field.schedule.addEvent: Add event
+field.schedule.goToToday: Go to Today
+field.schedule.time: Time
+dialog.event.delete.confirm: Are you sure you want to delete this event?
+dialog.item.delete.confirm: Are you sure you want to delete the event "{title}"?
+  This will remove the event from the schedule and all its occurrences.
+dialog.item.delete.title: Delete Event?
+dialog.item.add.title: Event Title
+dialog.item.add.location: Location
+dialog.item.add.lecturer: Lecturer
+dialog.item.add.color: Color
+dialog.item.placeholder.title: Enter a title
+dialog.item.placeholder.location: Enter a location
+dialog.item.placeholder.lecturer: Enter a lecturer
+dialog.item.placeholder.color: Enter a color
+dialog.item.edit.title: Event Title
+dialog.item.edit.location: Location
+dialog.item.edit.lecturer: Lecturer
+dialog.item.edit.color: Color
+dialog.event.edit.day: Day
+dialog.event.edit.day.sunday: Sunday
+dialog.event.edit.day.monday: Monday
+dialog.event.edit.day.tuesday: Tuesday
+dialog.event.edit.day.wednesday: Wednesday
+dialog.event.edit.day.thursday: Thursday
+dialog.event.edit.day.friday: Friday
+dialog.event.edit.day.saturday: Saturday
+dialog.event.edit.start: Start time
+dialog.event.edit.end: End time
+dialog.event.time.start: Start time
+dialog.event.time.end: End time
+dialog.event.time.recurring: Recurring
+dialog.event.time.recurring.help: Repeat this event every week at the same time.
+dialog.event.time.recurringEndDate: Recurring until
+dialog.event.time.recurringEndDate.help: Leave empty to repeat indefinitely.
+dropdown.edit: Edit
+dropdown.delete: Delete

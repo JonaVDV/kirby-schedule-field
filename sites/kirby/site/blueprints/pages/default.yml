@@ -1,0 +1,6 @@
+title: Default Page
+
+fields:
+  schedule:
+    type: schedule
+    label: Schedule

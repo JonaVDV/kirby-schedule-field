@@ -1,0 +1,40 @@
+field.schedule.addEvent: Evenement toevoegen
+field.schedule.goToToday: Naar vandaag
+field.schedule.time: Tijd
+dialog.event.delete.confirm: Weet je zeker dat je dit evenement wilt verwijderen uit het rooster?
+dialog.item.delete.confirm:
+  Weet je zeker dat je het evenement "{title}" wilt verwijderen?
+  Dit zal het evenement uit de planning en al zijn voorkomens verwijderen.
+dialog.item.delete.title: Evenement verwijderen?
+dialog.item.add.title: Evenement titel
+dialog.item.add.dialogTitle: Evenement toevoegen
+dialog.item.add.location: Locatie
+dialog.item.add.lecturer: Docent
+dialog.item.add.color: Kleur
+dialog.item.placeholder.title: Voer een titel in
+dialog.item.placeholder.location: Voer een locatie in
+dialog.item.placeholder.lecturer: Voer een docent in
+dialog.item.placeholder.color: Voer een kleur in
+dialog.item.edit.title: Evenement titel
+dialog.item.edit.dialogTitle: Evenement bewerken
+dialog.item.edit.location: Locatie
+dialog.item.edit.lecturer: Docent
+dialog.item.edit.color: Kleur
+dialog.event.edit.day: Dag
+dialog.event.edit.day.sunday: Zondag
+dialog.event.edit.day.monday: Maandag
+dialog.event.edit.day.tuesday: Dinsdag
+dialog.event.edit.day.wednesday: Woensdag
+dialog.event.edit.day.thursday: Donderdag
+dialog.event.edit.day.friday: Vrijdag
+dialog.event.edit.day.saturday: Zaterdag
+dialog.event.edit.start: Starttijd
+dialog.event.edit.end: Eindtijd
+dialog.event.time.start: Starttijd
+dialog.event.time.end: Eindtijd
+dialog.event.time.recurring: Terugkerend
+dialog.event.time.recurring.help: Herhaal dit evenement elke week op dezelfde tijd.
+dialog.event.time.recurringEndDate: Terugkerend tot
+dialog.event.time.recurringEndDate.help: Laat leeg om oneindig te herhalen.
+dropdown.edit: Bewerken
+dropdown.delete: Verwijderen

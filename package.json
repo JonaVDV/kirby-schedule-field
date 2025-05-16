@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "dev:plugin": "pnpm --filter kirby-schedule-field dev",
+    "build:plugin": "pnpm --filter kirby-schedule-field build",
+    "dev:docs": "pnpm --filter docs dev",
+    "build:docs": "pnpm --filter docs build"
+  }
+}

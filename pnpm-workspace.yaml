@@ -1,0 +1,4 @@
+packages:
+  - "packages/*"
+  - "sites/docs" # Astro site is a package
+  # sites/kirby is not a JS package, so it's not listed here
