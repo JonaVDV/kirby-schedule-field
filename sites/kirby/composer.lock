@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5d1ed225e31e4081616085c243198153",
+    "content-hash": "aa04513cb44a41ff81882cd9155e1c12",
     "packages": [
         {
             "name": "christian-riesen/base32",
@@ -421,6 +421,74 @@
             "time": "2020-12-28T12:54:39+00:00"
         },
         {
+            "name": "getkirby/kql",
+            "version": "2.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/getkirby/kql.git",
+                "reference": "5acb50c009e39202a9d6565d795908ba76828d9b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/getkirby/kql/zipball/5acb50c009e39202a9d6565d795908ba76828d9b",
+                "reference": "5acb50c009e39202a9d6565d795908ba76828d9b",
+                "shasum": ""
+            },
+            "require": {
+                "getkirby/cms": "^3.10.0 || ^4.0 || ^5.0",
+                "getkirby/composer-installer": "^1.2.1"
+            },
+            "type": "kirby-plugin",
+            "extra": {
+                "installer-name": "kql",
+                "kirby-cms-path": false
+            },
+            "autoload": {
+                "psr-4": {
+                    "Kirby\\": [
+                        "tests/"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Bastian Allgeier",
+                    "email": "bastian@getkirby.com"
+                },
+                {
+                    "name": "Nico Hoffmann",
+                    "email": "nico@getkirby.com"
+                }
+            ],
+            "description": "Kirby Query Language",
+            "homepage": "https://getkirby.com",
+            "keywords": [
+                "api",
+                "cms",
+                "headless",
+                "json",
+                "kirby",
+                "query"
+            ],
+            "support": {
+                "email": "support@getkirby.com",
+                "forum": "https://forum.getkirby.com",
+                "issues": "https://github.com/getkirby/kql/issues",
+                "source": "https://github.com/getkirby/kql"
+            },
+            "funding": [
+                {
+                    "url": "https://getkirby.com/buy",
+                    "type": "custom"
+                }
+            ],
+            "time": "2024-09-09T11:59:27+00:00"
+        },
+        {
             "name": "ima/kirby-schedule-field",
             "version": "dev-main",
             "dist": {
@@ -462,6 +530,64 @@
                 "symlink": true,
                 "relative": true
             }
+        },
+        {
+            "name": "johannschopplich/kirby-headless",
+            "version": "4.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/johannschopplich/kirby-headless.git",
+                "reference": "b5dad65e75915c36ce0fde853e73ffae6ca56268"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/johannschopplich/kirby-headless/zipball/b5dad65e75915c36ce0fde853e73ffae6ca56268",
+                "reference": "b5dad65e75915c36ce0fde853e73ffae6ca56268",
+                "shasum": ""
+            },
+            "require": {
+                "getkirby/composer-installer": "^1.2"
+            },
+            "require-dev": {
+                "getkirby/cms": "^4"
+            },
+            "type": "kirby-plugin",
+            "extra": {
+                "kirby-cms-path": false
+            },
+            "autoload": {
+                "psr-4": {
+                    "JohannSchopplich\\Headless\\": "src/classes/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Johann Schopplich",
+                    "email": "hello@johannschopplich.com",
+                    "homepage": "https://johannschopplich.com"
+                }
+            ],
+            "description": "Kirby CMS plugin to enable headless mode",
+            "homepage": "https://kirby.tools/docs/headless",
+            "keywords": [
+                "headless",
+                "kirby"
+            ],
+            "support": {
+                "issues": "https://github.com/johannschopplich/kirby-headless/issues",
+                "source": "https://github.com/johannschopplich/kirby-headless/tree/v4.0.2"
+            },
+            "funding": [
+                {
+                    "url": "https://paypal.me/jschopplich",
+                    "type": "custom"
+                }
+            ],
+            "time": "2024-11-21T10:41:30+00:00"
         },
         {
             "name": "laminas/laminas-escaper",

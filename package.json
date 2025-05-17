@@ -3,6 +3,20 @@
     "dev:plugin": "pnpm --filter kirby-schedule-field dev",
     "build:plugin": "pnpm --filter kirby-schedule-field build",
     "dev:docs": "pnpm --filter docs dev",
-    "build:docs": "pnpm --filter docs build"
+    "build:docs": "pnpm --filter docs build",
+    "start:kirby": "cd sites/kirby && composer start",
+    "dev": "concurrently 'pnpm:dev:plugin' 'pnpm:dev:docs' 'pnpm:start:kirby'",
+    "build": "pnpm build:plugin && pnpm build:docs",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "eslint": "^9.27.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.0.0",
+    "prettier": "^3.5.3"
+  },
+  "lint-staged": {
+    "*.{js,ts,jsx,tsx,mjs,cjs,json,md,yml,yaml}": "prettier --write"
   }
 }

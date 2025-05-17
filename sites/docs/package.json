@@ -1,5 +1,5 @@
 {
-  "name": "",
+  "name": "docs",
   "type": "module",
   "version": "0.0.1",
   "scripts": {
@@ -9,6 +9,12 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^5.7.13"
+    "@astrojs/svelte": "^7.0.13",
+    "astro": "^5.7.13",
+    "astro-purgecss": "^5.2.2",
+    "purgecss": "^7.0.2",
+    "sass": "^1.89.0",
+    "svelte": "^5.30.2",
+    "typescript": "^5.8.3"
   }
 }
