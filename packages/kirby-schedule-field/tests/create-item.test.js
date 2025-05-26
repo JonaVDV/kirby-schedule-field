@@ -1,6 +1,6 @@
 import { expect, test, describe } from 'vitest';
 import { createLocalVue, mount } from '@vue/test-utils'; // Import createLocalVue
-import CreateItem from '../src/components/create-item.vue';
+import CreateItem from '@/components/create-item.vue';
 
 
 describe('CreateItem.vue', () => {
