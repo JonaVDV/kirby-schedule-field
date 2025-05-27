@@ -177,7 +177,12 @@ export default defineComponent({
       handler(newValue) {
         this.items = newValue.items || [];
         this.events = newValue.events || [];
-        this.recurringEvents = newValue.recurringEvents || [];
+        if (!Array.isArray(newValue.recurringEvents)) {
+          this.recurringEvents = [];
+        } else {
+          this.recurringEvents = newValue.recurringEvents || [];
+        }
+
 
         this.$emit("input", {
           items: newValue.items,
