@@ -9,12 +9,14 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/svelte": "^7.0.13",
-    "astro": "^5.7.13",
+    "@astrojs/svelte": "7.1.0",
+    "astro": "5.10.0",
     "astro-purgecss": "^5.2.2",
     "purgecss": "^7.0.2",
-    "sass": "^1.89.0",
     "svelte": "^5.30.2",
     "typescript": "^5.8.3"
+  },
+  "devDependencies": {
+    "sass-embedded": "^1.89.1"
   }
 }

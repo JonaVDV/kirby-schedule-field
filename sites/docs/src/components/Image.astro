@@ -1,0 +1,29 @@
+---
+import type { ComponentProps } from "astro/types";
+import { Image as Img } from "astro:assets";
+
+type Props = ComponentProps<typeof Img> & {
+  content: {
+    image: {
+      url: string;
+      alt: string;
+      width: number;
+      height: number;
+      srcset?: string;
+    }[];
+  };
+};
+
+const { content, ...rest }: Props = Astro.props;
+
+const { url, alt, width, height, srcset } = content.image[0];
+---
+
+<Img
+  {...rest}
+  src={url}
+  alt={alt || ""}
+  width={width}
+  height={height}
+  srcset={srcset}
+/>

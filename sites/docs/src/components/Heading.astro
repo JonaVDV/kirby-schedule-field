@@ -1,0 +1,21 @@
+---
+interface Props {
+  content: {
+    text: string;
+    level: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+  };
+}
+const { content } = Astro.props;
+
+const Tag = content.level;
+---
+
+<Tag class={`heading heading-${content.level}`}>
+  {content.text}
+</Tag>
+
+<style lang="scss">
+  .heading {
+    
+  }
+</style>

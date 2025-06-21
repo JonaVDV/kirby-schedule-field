@@ -1,0 +1,37 @@
+---
+import type { ComponentProps } from "astro/types";
+import { Code as AstroCode } from "astro:components";
+
+interface Props
+  extends Omit<ComponentProps<typeof AstroCode>, "code" | "lang"> {
+  content: {
+    code: string;
+    language: ComponentProps<typeof AstroCode>["lang"];
+  };
+  filename?: string;
+}
+
+const { content, filename, ...rest } = Astro.props;
+---
+
+<section>
+  {
+    filename && (
+      <div class="filename">
+        <span>{filename}</span>
+      </div>
+    )
+  }
+  <AstroCode
+    code={content.code}
+    lang={content.language}
+    class="astro-code"
+    theme={"dracula"}
+  />
+</section>
+
+<style lang="scss">
+  .filename {
+    font-weight: 700;
+  }
+</style>

@@ -1,0 +1,45 @@
+---
+interface Props {
+  blocks: {
+    type: string;
+    content: any;
+    isHidden: boolean;
+    id: string;
+  }[];
+}
+
+import Text from "./Text.astro";
+import Heading from "./Heading.astro";
+import Code from "./Code.astro";
+import Image from "./Image.astro";
+
+const components = {
+  text: Text,
+  heading: Heading,
+  code: Code,
+  image: Image,
+};
+
+const { blocks } = Astro.props;
+---
+
+<div>
+  {
+    blocks.map((block) => {
+      if (block.type in components) {
+        const Component = components[block.type];
+        return (
+          <div>
+            <Component content={block.content} />
+          </div>
+        );
+      }
+
+      return (
+        <div>
+          <p>Unknown block type: {block.type}</p>
+        </div>
+      );
+    })
+  }
+</div>

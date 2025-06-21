@@ -1,0 +1,50 @@
+---
+import KirbyBlocks from "../components/KirbyBlocks.astro";
+import { kql } from "../utils/kql";
+import "../styles/main.scss";
+import type { GetStaticPaths } from "astro";
+export const getStaticPaths = (async () => {
+  const pages = (await kql({
+    query: "site.index",
+    select: {
+      uri: true,
+      title: true,
+      isHomePage: true,
+    },
+  })) as { result: { uri: string; title: string; isHomePage: boolean }[] };
+  console.log(pages);
+
+  return pages.result.map((page) => ({
+    params: { slug: page.isHomePage ? "/" : page.uri },
+    props: { title: page.title, isHomePage: page.isHomePage },
+  }));
+}) satisfies GetStaticPaths;
+
+const { slug } = Astro.params;
+
+const { title, isHomePage } = Astro.props;
+
+const content = await kql({
+  query: `page("${isHomePage ? "home" : slug}")`,
+  select: {
+    blocks: "page.blocks.toResolvedBlocks",
+    test: "page.test.toUri",
+  },
+});
+
+console.dir(content, { depth: Infinity });
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <main id="main-content">
+      <KirbyBlocks blocks={content.result.blocks} />
+    </main>
+  </body>
+</html>
