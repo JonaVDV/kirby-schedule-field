@@ -2,10 +2,14 @@
 
 use Kirby\Content\Field;
 use Kirby\Toolkit\A;
-
+use Kirby\Cms\Structure;
 
 return [
-    'toEvents' => function (Field $field): array { // Return type hint changed to array
+    /**
+     * Converts the field value to an array of events.
+     * @kql-allowed
+     */
+    'toEvents' => function (Field $field) {
         $value = $field->yaml(); // Decode YAML to array
         $events = $value['events'] ?? [];
         $items = $value['items'] ?? [];
@@ -17,25 +21,14 @@ return [
             $itemId = $event['itemId'] ?? null;
             $item = $itemsById[$itemId] ?? null;
             $event['content'] = $item;
-            $user = null;
-            if ($item['lecturer'] && size($item['lecturer']) > 0) {
-                $user = kirby()->users()->find($item['lecturer'][0]['id']) ?? null;
-            }
-
-            $event['content']['lecturer'] = $user ? [
-                'name' => ($user->name()->or(''))->value(),
-                'link' => $user->link()->toPage()?->uri(),
-                'description' => $user->description()->value(),
-                'avatar' => $user->avatar() ? [
-                    'url' => $user->avatar()->url(),
-                    'alt' => $user->name()->value(),
-                ] : null,
-            ] : null;
             unset($event['itemId']);
 
             return $event;
         }, $events);
 
-        return $resolvedEvents; // Return the array of resolved events
+        return Structure::factory($resolvedEvents, [
+            'parent' => $field->parent(),
+            'field' => $field
+        ]);
     }
 ];
