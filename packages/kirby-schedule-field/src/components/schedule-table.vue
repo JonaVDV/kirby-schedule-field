@@ -10,7 +10,7 @@
             data-mobile="true"
             class="day-header"
             :class="{
-              'hidden-mobile': dayIndex !== currentDay.day(),
+              'hidden-mobile': dayIndex !== dayjs.day(),
             }"
           >
             <span>
@@ -25,7 +25,7 @@
       <tbody>
         <tr class="schedule-slots" v-for="hour in getTimeRange" :key="hour">
           <td class="time-cell" data-mobile="true">
-            {{ String(hour).padStart(2, "0") }}:00
+            {{ $library.dayjs.interpret(String(hour), "time").format("HH:mm") }}
           </td>
           <td
             v-for="(date, dayIndex) in datesOfCurrentWeek"
@@ -34,8 +34,8 @@
             :data-day="date.format('dddd')"
             :data-hour="hour"
             :class="{
-              'active-day-cell': currentDay.day() === dayIndex,
-              'hidden-mobile': dayIndex !== currentDay.day(),
+              'active-day-cell': dayjs.day() === dayIndex,
+              'hidden-mobile': dayIndex !== dayjs.day(),
             }"
             data-mobile="true"
           >
@@ -54,11 +54,8 @@
                 :style="
                   getEventDynamicStyle(index, getEventsForslot(dayIndex, hour))
                 "
-                @delete-event="$emit('delete-event', event.instanceId)"
-                @edit-event="
-                  (instanceId, newValues) =>
-                    $emit('edit-event', instanceId, newValues)
-                "
+                @delete-event="$emit('delete-event', $event)"
+                @edit-event="$emit('edit-event', $event)"
               />
             </k-draggable>
           </td>
@@ -70,9 +67,15 @@
 
 <script>
 import { defineComponent } from "vue";
-import { Dayjs } from "dayjs/";
-import { openTimeDialog } from "../dialogs/event-dialogs";
+import { eventTimeFields, openFormDialogAsync } from "../dialogs/event-dialogs";
 import ScheduleEventItem from "./schedule-event-item.vue";
+import { getLocale } from "../utils/dayjs-languages";
+
+/**
+ * @typedef {import('../types/index').Event} Event
+ * @typedef {import('dayjs').Dayjs} Dayjs
+ * @typedef {import('../types/index').DragChangeEvent<Event>} DragChangeEvent
+ */
 
 export default defineComponent({
   components: {
@@ -81,44 +84,57 @@ export default defineComponent({
   props: {
     timeRangeStart: Number,
     timeRangeEnd: Number,
-    currentLocale: {
-      type: String,
-    },
-    currentDay: {
-      /**
-       * @type {import('vue').PropType<Dayjs>}
-       */
-      type: Object,
-    },
+    /**
+     * @type {import('vue').PropType<Dayjs>}
+     */
+    currentDay: Object,
   },
+
   data() {
     return {
-      currentDay: this.$library.dayjs(),
       /**
-       * @type {import('./schedule-event-item.vue').Event[]}
+       * @type {Event[]}
        */
       tempEvents: [],
       draggedEventInstanceId: null,
+      currentDay: this.$library.dayjs(),
     };
   },
-  beforeMount() {
-    this.$library.dayjs.locale(this.currentLocale);
-    console.log("Current locale:", this.$library.dayjs.locale());
-
-    // console.log("Subfields:", fields);
-  },
   inject: ["allEvents", "allItems"],
+  async mounted() {
+    const dayJSLang = await getLocale(this.$panel.user.language);
+    this.currentDay = this.$library.dayjs();
+    console.log(this.datesOfCurrentWeek);
+  },
   methods: {
     /**
+     * Calculates the duration in hours between two time strings.
+     * The time strings should be in the format "HH:mm:ss".
+     * @param startTime {string} - The start time in "HH:mm:ss" format.
+     * @param endTime {string} - The end time in "HH:mm:ss" format.
+     */
+    calculateDuration(startTime, endTime) {
+      const start = this.$library.dayjs(`2000-01-01 ${startTime}`);
+      const end = this.$library.dayjs(`2000-01-01 ${endTime}`);
+      return end.diff(start, "hour", true);
+    },
+    /**
      * @param targetDate {Dayjs}
-     * @param changeEvent {DragEvent}
+     * @param changeEvent {DragChangeEvent}
      * @param targetHour {number}
      */
-    handleItemDrop(changeEvent, targetDate, targetHour) {
-      // Ignore events on the source list or sorts within the same list for move logic
-      if (changeEvent.removed || changeEvent.moved) {
+    async handleItemDrop(changeEvent, targetDate, targetHour) {
+      // Handle removed events (when dragging FROM this slot)
+      if (changeEvent.removed) {
+        // Don't do anything here - the move will be handled by the added event
         return;
       }
+
+      // Ignore sorts within the same list
+      if (changeEvent.moved) {
+        return;
+      }
+
       if (changeEvent.added) {
         if (this.draggedEventInstanceId) {
           const event = this.events.find((e) => {
@@ -129,6 +145,10 @@ export default defineComponent({
             console.error("Event not found for dragged instance ID.");
             return;
           }
+          console.log(
+            "test",
+            this.$library.dayjs.Ls[this.$panel.user.language],
+          );
 
           this.handleMove(event, targetDate.day(), targetHour);
         } else if (
@@ -142,58 +162,53 @@ export default defineComponent({
             String(targetHour).padStart(2, "0") + ":00:00";
           const targetEndTime =
             String(targetHour + 1).padStart(2, "0") + ":00:00";
-
-          openTimeDialog(
-            (timeData) => {
-              // startTime and endTime are in the format "HH:mm:ss"
-              const startTime = timeData.start;
-              const endTime = timeData.end;
-
-              // Parse times using dayjs. Using an arbitrary date like '2000-01-01'
-              // helps handle time-only parsing consistently.
-              const startDateTime = this.$library.dayjs(
-                `2000-01-01 ${startTime}`
-              );
-              const endDateTime = this.$library.dayjs(`2000-01-01 ${endTime}`);
-              const duration = endDateTime.diff(startDateTime, "minute");
-              // round to 3 decimal places
-              const durationInHours = Math.round((duration / 60) * 1000) / 1000;
-
-              const newEvent = {
-                /* ... create event object ... */
-                itemId: addedElement.id,
-                instanceId: this.$helper.string.uuid(),
-                dayOfWeek: targetDate.day(),
-                startDate: targetDate.format("YYYY-MM-DD"),
-                startTime: timeData.start,
-                endTime: timeData.end,
-                duration: durationInHours,
-                recurring: timeData.recurring,
-                recurringEndDate: timeData.recurring
-                  ? timeData.recurringEndDate
-                  : null,
-              };
-              this.$emit("create-event", newEvent);
-            },
+          const data = await openFormDialogAsync(
+            eventTimeFields(),
             {
               startTime: targetStartTime,
               endTime: targetEndTime,
               recurring: false,
-              recurringEndDate: null,
-            }
+              recurringEndDate: undefined,
+            },
+            {},
           );
+
+          if (!data) {
+            console.warn(
+              "Event creation dialog was cancelled or no data returned.",
+            );
+            return;
+          }
+
+          /**
+           * @type {any}
+           */
+          const newEvent = {
+            itemId: addedElement.id,
+            instanceId: this.$helper.string.uuid(),
+            dayOfWeek: targetDate.day(),
+            startDate: targetDate.format("YYYY-MM-DD"),
+            startTime: data.startTime,
+            endTime: data.endTime,
+            duration: this.calculateDuration(data.startTime, data.endTime),
+            recurring: data.recurring || false,
+            recurringEndDate: data.recurring
+              ? data.recurringEndDate || null
+              : null,
+          };
+
+          this.$emit("create-event", newEvent);
         } else {
           console.log(
             "Added event occurred, but it wasn't a tracked move or a recognized new item.",
-            changeEvent.added
+            changeEvent.added,
           );
         }
       }
     },
 
     /**
-     * @param dragEvent {DragEvent}
-     *
+     * @param dragEvent {any}
      */
     handleDragStart(dragEvent) {
       if (!dragEvent.item && !dragEvent.item.__vue__) {
@@ -213,25 +228,34 @@ export default defineComponent({
       this.draggedEventInstanceId = null;
     },
     /**
-     *
-     * @param {import('./schedule-event-item.vue').Event} event
+     * @param {any} event
      * @param {number} newDayIndex
      * @param {number} newStartHour
      */
-    handleMove(event, newDayIndex, newStartHour) {
+    async handleMove(event, newDayIndex, newStartHour) {
+      console.trace(
+        `Moving event ${event.instanceId} to day index ${newDayIndex} and start hour ${newStartHour}`,
+      );
+
       const newStartTime = String(newStartHour).padStart(2, "0") + ":00:00";
-      const currentStartDate = this.$library.dayjs(event.startDate);
+      const locale = await getLocale(this.$panel.user.language);
+      this.$library.dayjs.locale(locale);
+
+      const currentStartDate = this.$library.dayjs.interpret(event.startDate);
+      console.log(currentStartDate.startOf("week").add(newDayIndex - 1, "day"));
       const newStartDate = currentStartDate
         .startOf("week")
-        .add(newDayIndex, "day")
+        .add(newDayIndex - locale.weekStart, "day")
         .format("YYYY-MM-DD");
 
       /**
-       * @type {Partial<import('./schedule-event-item.vue').Event>}
+       * @type {any}
        */
       const newEvent = {
         startDate: newStartDate,
         startTime: newStartTime,
+        endTime:
+          String(newStartHour + event.duration).padStart(2, "0") + ":00:00",
         dayOfWeek: newDayIndex,
       };
 
@@ -242,21 +266,18 @@ export default defineComponent({
     },
 
     /**
-     *
      * @param dayIndex {number}
      * @param dayOfWeek {number}
      * @param startHour {number}
-     *
-     *
-     * @return {import('./schedule-event-item.vue').Event[]}
+     * @returns {any[]}
      */
     getEventsForslot(dayIndex, startHour) {
       const slotDate = this.startOfWeek.add(dayIndex, "day");
       const formattedSlotDate = slotDate.format("YYYY-MM-DD");
-      const formattedStartTime = String(startHour).padStart(2, "0") + ":00:00";
+      const actualDayOfWeek = slotDate.day();
       const filteredEvents = this.events.filter((event) => {
         if (
-          event.dayOfWeek !== dayIndex ||
+          event.dayOfWeek !== actualDayOfWeek ||
           parseInt(event.startTime.split(":")[0], 10) !== startHour
         ) {
           return false;
@@ -270,7 +291,7 @@ export default defineComponent({
         else {
           const eventStartDate = this.$library.dayjs(event.startDate);
           const eventRecurringEndDate = this.$library.dayjs(
-            event.recurringEndDate
+            event.recurringEndDate,
           );
 
           if (slotDate.isBefore(eventStartDate, "day")) {
@@ -286,7 +307,8 @@ export default defineComponent({
             eventStartDate,
             eventRecurringEndDate,
             "day",
-            "[]"
+            "[]",
+            newDayIndex,
           );
         }
       });
@@ -316,12 +338,18 @@ export default defineComponent({
   },
   computed: {
     /**
+     * @returns {Dayjs} - The current day as a Dayjs object.
+     */
+    dayjs() {
+      return this.currentDay; // Use computed property instead of data
+    },
+    /**
      * @returns {number[]} - The list of times in the range from timeRangeStart to timeRangeEnd.
      */
     getTimeRange() {
       return Array.from(
         { length: this.timeRangeEnd - this.timeRangeStart + 1 },
-        (_, i) => i + this.timeRangeStart
+        (_, i) => i + this.timeRangeStart,
       );
     },
     startOfWeek() {
@@ -332,15 +360,20 @@ export default defineComponent({
     },
     datesOfCurrentWeek() {
       return Array.from({ length: 7 }, (_, i) =>
-        this.startOfWeek.add(i, "day")
+        this.startOfWeek.add(i, "day"),
       );
     },
     /**
-     * @return {import('./schedule-event-item.vue').Event[]}
+     * @returns {Event[]}
      */
     events() {
       return this.allEvents;
     },
+    /**
+     * Returns a formatted string for the week label.
+     * The format is "YYYY-ww" where "YYYY" is the year and "ww" is the week number.
+     * @returns {string}
+     */
     displayWeeklabel() {
       // Use the endOfWeek date to determine the year and week number for display
       return this.endOfWeek.format("YYYY-ww");
@@ -355,7 +388,6 @@ export default defineComponent({
       };
     },
   },
-  emits: ["delete-event", "edit-event", "create-event", "move-event"],
 });
 </script>
 

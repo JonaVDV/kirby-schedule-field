@@ -39,10 +39,9 @@
     </div>
     <div>
       <ScheduleTable
-        :current-locale="currentLocale"
+        :current-day="currentDay"
         :time-range-start="timeRangeStart"
         :time-range-end="timeRangeEnd"
-        :current-day="currentDay"
         @delete-event="deleteEvent"
         @create-event="createEvent"
         @edit-event="editEvent"
@@ -53,31 +52,30 @@
 </template>
 
 <script lang="js">
-import  weekOfYear  from "dayjs/plugin/weekOfYear";
+import weekOfYear from "dayjs/plugin/weekOfYear";
 import advancedFormat from "dayjs/plugin/advancedFormat";
-import LangNl from "dayjs/locale/nl";
 import isBetween from "dayjs/plugin/isBetween";
 import ScheduleEventItem from "./schedule-event-item.vue";
 import ScheduleTable from "./schedule-table.vue";
-import {defineComponent, computed} from 'vue'
+import { defineComponent, computed } from "vue";
 import CreateItem from "./create-item.vue";
 import { openItemDeleteDialog } from "../dialogs/item-dialogs";
-
+import { getLocale } from "../utils/dayjs-languages";
 
 /**
+ *
+ * @typedef {import('../types/index').Event} Event
+ *
  * @typedef {Object} Value
- * @property {import('./schedule-event-item.vue').Event[]} events
- * @property {import('./create-item.vue').Item[]} items
- * @property {import('./schedule-event-item.vue').Event[]} recurringEvents
+ * @property {import('./schedule-event-item.vue').Event[]} events - The events for the schedule.
+ * @property {import('./create-item.vue').Item[]} items - The items for the schedule.
  *
  * @typedef {Object} createProps
- * @property {Object[]} fields
+ * @property {Object[]} fields - The fields to be used in the create item form.
  *
  */
 
-
 export default defineComponent({
-  extends: "k-field",
   components: {
     ScheduleEventItem,
     ScheduleTable,
@@ -121,40 +119,28 @@ export default defineComponent({
        * @description The events for the current week.
        */
       events: [],
-      /**
-       * @type {Value['recurringEvents']}
-       * @description The recurring events, that are visible for a certain period of time.
-       */
-      recurringEvents: [],
       currentDay: this.$library.dayjs(),
-      currentLocale: 'en',
-
+      /**
+       * @type {Required<Parameters<typeof this.$library.dayjs.locale>[1]> | null}
+       */
+      userLocale: null,
     };
   },
   provide() {
     return {
       allItems: computed(() => this.items),
       allEvents: computed(() => this.events),
-      allRecurringEvents: computed(() => this.recurringEvents),
-    }
+      // currentDay: computed(() => this.currentDay),
+    };
   },
-  beforeMount() {
+  async beforeMount() {
     this.$library.dayjs.extend(weekOfYear);
     this.$library.dayjs.extend(advancedFormat);
     this.$library.dayjs.extend(isBetween);
 
-    const localeCode = window.panel.translation.code;
-    this.currentLocale = localeCode;
-
-    if (window.panel.translation.code === "nl") {
-      console.log("Setting locale to:", window.panel.translation.code);
-
-      this.$library.dayjs.locale(LangNl);
-      console.log(this.$library.dayjs.locale());
-    } else {
-
-      this.$library.dayjs.locale(window.panel.translation.code);
-    }
+    const dayJSLang = await getLocale(this.$panel.user.language);
+    this.userLocale = dayJSLang;
+    this.currentDay = this.$library.dayjs().locale(dayJSLang);
   },
   computed: {
     startOfWeek() {
@@ -177,17 +163,10 @@ export default defineComponent({
       handler(newValue) {
         this.items = newValue.items || [];
         this.events = newValue.events || [];
-        if (!Array.isArray(newValue.recurringEvents)) {
-          this.recurringEvents = [];
-        } else {
-          this.recurringEvents = newValue.recurringEvents || [];
-        }
-
 
         this.$emit("input", {
           items: newValue.items,
           events: newValue.events,
-          recurringEvents: newValue.recurringEvents,
         });
       },
       deep: true,
@@ -208,9 +187,8 @@ export default defineComponent({
       console.log("Items after save:", this.items);
 
       this.$emit("input", {
-          items: this.items,
-          events: this.events,
-          recurringEvents: this.recurringEvents,
+        items: this.items,
+        events: this.events,
       });
     },
     /**
@@ -226,13 +204,11 @@ export default defineComponent({
         this.$emit("input", {
           items: this.items,
           events: this.events,
-          recurringEvents: this.recurringEvents,
         });
       }
-
     },
     goToToday() {
-      this.currentDay = this.$library.dayjs();
+      this.currentDay = this.$library.dayjs().locale(this.userLocale);
     },
     form() {
       const fields = this.$helper.field.subfields(this, {
@@ -250,72 +226,104 @@ export default defineComponent({
 
     /**
      *
-     * @param eventData {import('./schedule-event-item.vue').Event}
+     * @param eventData {Event}
      */
     createEvent(eventData) {
       this.events.push(eventData);
       this.$emit("input", {
-          items: this.items,
-          events: this.events,
-          recurringEvents: this.recurringEvents,
-        });
+        items: this.items,
+        events: this.events,
+      });
     },
     /**
      * @param payload {Object}
      * @param payload.instanceId {string}
-     * @param payload.newValues {Partial<import('./schedule-event-item.vue').Event>}
+     * @param payload.newValues {Partial<Event>}
      */
-    moveEvent({instanceId, newValues}) {
-      const index = this.events.findIndex((event) => event.instanceId === instanceId);
+    moveEvent({ instanceId, newValues }) {
+      console.log(
+        "Moving event with instanceId:",
+        instanceId,
+        "New values:",
+        newValues,
+      );
+
+      const index = this.events.findIndex(
+        (event) => event.instanceId === instanceId,
+      );
       if (index === -1) {
         console.error("Event not found for instanceId:", instanceId);
         return;
       }
       const event = this.events[index];
+      /**
+       * @satisfies {Partial<Event>}
+       */
       const updatedEvent = {
         ...event,
         startTime: newValues.startTime,
-        dayOfWeek: newValues.dayOfWeek,
+        endTime: newValues.endTime,
+        dayOfWeek: parseInt(newValues.dayOfWeek),
         startDate: newValues.startDate,
       };
 
-      this.events.splice(index, 1, updatedEvent);
+      console.log(this.events);
+
+      this.events = [
+        ...this.events.slice(0, index),
+        updatedEvent,
+        ...this.events.slice(index + 1),
+      ];
       this.$emit("input", {
         items: this.items,
         events: this.events,
-        recurringEvents: this.recurringEvents,
+      });
+    },
+
+    updateValue() {
+      this.$emit("input", {
+        items: this.items,
+        events: this.events,
       });
     },
 
     /**
-     *
-     * @param id {string}
-     * @param newValues {import('./schedule-event-item.vue').Event}
+     * @param {Object} payload
+     * @param {string} payload.instanceId
+     * @param {Partial<Event>} payload.newValues
      */
-    editEvent(id, newValues) {
-      console.log("Editing event with id:", id, "New values:", newValues);
+    editEvent({ instanceId, newValues }) {
+      console.log(
+        "Editing event with id:",
+        instanceId,
+        "New values:",
+        newValues,
+      );
 
-      const index = this.events.findIndex((event) => event.instanceId === id);
+      const index = this.events.findIndex(
+        (event) => event.instanceId === instanceId,
+      );
       if (index !== -1) {
-        const startTimeString = newValues.start;
-        const endTimeString = newValues.end;
+        const startTimeString = newValues.startTime;
+        const endTimeString = newValues.endTime;
 
         // Recalculate duration
-        const startDateTime = this.$library.dayjs(`2000-01-01 ${startTimeString}`);
+        const startDateTime = this.$library.dayjs(
+          `2000-01-01 ${startTimeString}`,
+        );
         const endDateTime = this.$library.dayjs(`2000-01-01 ${endTimeString}`);
         const durationInMinutes = endDateTime.diff(startDateTime, "minute");
         const newDuration = ((durationInMinutes / 60) * 1000) / 1000;
-        this.events[index] = { ...this.events[index],
-          ...newValues,
-          startTime: newValues.start,
-          endTime: newValues.end,
-          dayOfWeek: Number(newValues.day),
+        this.events[index] = {
+          ...this.events[index],
+          startTime: newValues.startTime,
+          endTime: newValues.endTime,
+          dayOfWeek: Number(newValues.dayOfWeek),
           duration: newDuration,
         };
         this.$emit("input", {
           items: this.items,
           events: this.events,
-          recurringEvents: this.recurringEvents,
         });
       }
     },
@@ -328,21 +336,18 @@ export default defineComponent({
       openItemDeleteDialog(item, () => {
         this.items = this.items.filter((item) => {
           return item.id !== id;
-        })
+        });
 
         this.events = this.events.filter((event) => {
           return event.itemId !== id;
         });
 
         this.$emit("input", {
-            items: this.items,
-            events: this.events,
-            recurringEvents: this.recurringEvents,
+          items: this.items,
+          events: this.events,
         });
-      })
-
+      });
     },
-
 
     /**
      *
@@ -353,14 +358,13 @@ export default defineComponent({
 
       this.events = this.events.filter((event) => {
         return event.instanceId !== instanceId;
-      })
+      });
 
       this.$emit("input", {
-          items: this.items,
-          events: this.events,
-          recurringEvents: this.recurringEvents,
+        items: this.items,
+        events: this.events,
       });
-    }
+    },
   },
 });
 </script>

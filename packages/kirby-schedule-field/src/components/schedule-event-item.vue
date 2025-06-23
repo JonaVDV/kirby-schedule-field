@@ -26,20 +26,15 @@
 
 <script>
 import { defineComponent } from "vue";
-import { eventEditDialog, openDeleteDialog } from "../dialogs/event-dialogs";
+import {
+  eventEditFields,
+  openDeleteDialog,
+  openFormDialogAsync,
+} from "../dialogs/event-dialogs";
 
 /**
- * @typedef {Object} Event
- * @property {string} itemId - The ID of the event.
- * @property {string} startDate - The start time of the event.
- * @property {string} endDate - The end time of the event.
- * @property {number} dayOfWeek - The day of the week of the event.
- * @property {string} instanceId - The instance ID of the event.
- * @property {string} startTime - The start time of the event.
- * @property {string} endTime - The end time of the event.
- * @property {number} duration - The duration of the event in hours.
- * @property {boolean} recurring - Indicates if the event is recurring.
- * @property {string | null} recurringEndDate - The end date of the recurring event.
+ * @typedef {import('../types/index').Event} Event
+ * @typedef {import('./create-item.vue').Item} Item
  */
 
 export default defineComponent({
@@ -69,12 +64,35 @@ export default defineComponent({
      * Opens the edit dialog for the event. and returns the new values.
      * @param event {Event}
      */
-    editEvent(event) {
-      eventEditDialog((newValues) => {
-        this.$emit("edit-event", event.instanceId, newValues);
-      }, event);
+    async editEvent(event) {
+      const { dayOfWeek, endTime, startTime, recurring, recurringEndDate } =
+        event;
+      const data = await openFormDialogAsync(
+        eventEditFields(),
+        {
+          dayOfWeek: dayOfWeek,
+          endTime: endTime,
+          startTime: startTime,
+          recurring,
+          recurringEndDate,
+        },
+        {},
+      );
+      if (data) {
+        console.log("Editing event:", data);
+        this.$emit("edit-event", {
+          instanceId: event.instanceId,
+          newValues: data,
+        });
+      } else {
+        console.warn("Edit dialog was cancelled or no data returned.");
+      }
     },
 
+    /**
+     *
+     * @param action {"edit" | "delete"}
+     */
     handleAction(action) {
       switch (action) {
         case "edit":
@@ -94,16 +112,19 @@ export default defineComponent({
      * @returns {import('./create-item.vue').Item | undefined}
      */
     item() {
-      return this.allItems.find((item) => item.id === this.event.itemId);
+      return this.allItems.find(
+        (
+          /**@type Item */
+          item,
+        ) => item.id === this.event.itemId,
+      );
     },
     duration() {
-      // Ensure it's a number, provide a default if necessary
       return Number(this.event.duration) || 1;
     },
     cssTopValue() {
       // Calculate the top position based on the event's start time and duration
       const startTime = this.event.startTime.split(":");
-      const startHour = Number(startTime[0]);
       const startMinute = Number(startTime[1]);
       const t = (1 / 60) * startMinute;
       return t * 100;
@@ -129,7 +150,20 @@ export default defineComponent({
       ];
     },
   },
-  emits: ["delete-event", "edit-event"],
+  emits: {
+    /**
+     *
+     * @param eventId {string} The ID of the event to delete.
+     */
+    "delete-event"(eventId) {},
+    /**
+     *
+     * @param payload {object}
+     * @param payload.instanceId {string} The ID of the event to edit.
+     * @param payload.newValues {Partial<Event>} The new values for the event.
+     */
+    "edit-event"({ instanceId, newValues }) {},
+  },
 });
 </script>
 
@@ -144,15 +178,18 @@ li.event {
   width: var(--event-width);
   left: var(--event-left);
   z-index: 1;
-  border-radius: var(--rounded-sm); /* Use Kirby's border radius */
-  box-shadow: var(--shadow-sm); /* Use Kirby's shadow */
+  border-radius: var(--rounded-sm);
+  box-shadow: var(--shadow-sm);
   display: flex;
   justify-content: space-between;
   pointer-events: fill;
   align-items: flex-start;
   padding: var(--spacing-1) var(--spacing-2);
   cursor: pointer;
-  transition: width 0.3s ease, opacity 1s ease, left 0.3s ease;
+  transition:
+    width 0.3s ease,
+    opacity 1s ease,
+    left 0.3s ease;
 }
 
 li.event:hover {

@@ -36,7 +36,6 @@
 
 <script>
 import { defineComponent } from "vue";
-import { openItemEditDialog } from "../dialogs/item-dialogs.js";
 import { openFormDrawerAsync } from "../dialogs/event-dialogs.js";
 /**
  *@typedef {Object} Item
@@ -46,7 +45,6 @@ import { openFormDrawerAsync } from "../dialogs/event-dialogs.js";
  *@property {string} color
  */
 export default defineComponent({
-  extends: "k-structure-field",
   props: {
     items: {
       /**

@@ -1,5 +1,199 @@
 import dayjs, { type Dayjs } from "dayjs";
 import { type Component, ComponentPublicInstance } from "vue";
+import { type MoveEvent } from "sortablejs";
+
+type Locales = {
+  bg: "bg_BG";
+  ca: "ca_ES";
+  cs: "cs_CZ";
+  da: "da_DK";
+  de: "de_DE";
+  el: "el_GR";
+  en: "en_US";
+  eo: "eo";
+  es_419: "es_419";
+  es_ES: "es_ES";
+  fa: "fa_IR";
+  fi: "fi_FI";
+  fr: "fr_FR";
+  hu: "hu_HU";
+  id: "id_ID";
+  is_IS: "is_IS";
+  it: "it_IT";
+  ko: "ko_KR";
+  lt: "lt_LT";
+  nb: "nb_NO";
+  nl: "nl_NL";
+  pl: "pl_PL";
+  pt_BR: "pt_BR";
+  pt_PT: "pt_PT";
+  ro: "ro_RO";
+  ru: "ru_RU";
+  sk: "sk_SK";
+  sv_SE: "sv_SE";
+  tr: "tr_TR";
+};
+
+type AsciiConversionTable = {
+  "/°|₀/": "0";
+  "/¹|₁/": "1";
+  "/²|₂/": "2";
+  "/³|₃/": "3";
+  "/⁴|₄/": "4";
+  "/⁵|₅/": "5";
+  "/⁶|₆/": "6";
+  "/⁷|₇/": "7";
+  "/⁸|₈/": "8";
+  "/⁹|₉/": "9";
+  "/À|Á|Â|Ã|Å|Ǻ|Ā|Ă|Ą|Ǎ|Ä|A/": "A";
+  "/à|á|â|ã|å|ǻ|ā|ă|ą|ǎ|ª|æ|ǽ|ä|a|а/": "a";
+  "/Б/": "B";
+  "/б/": "b";
+  "/Ç|Ć|Ĉ|Ċ|Č|Ц/": "C";
+  "/ç|ć|ĉ|ċ|č|ц/": "c";
+  "/Ð|Ď|Đ/": "Dj";
+  "/ð|ď|đ/": "dj";
+  "/Д/": "D";
+  "/д/": "d";
+  "/È|É|Ê|Ë|Ē|Ĕ|Ė|Ę|Ě|Е|Ё|Э/": "E";
+  "/è|é|ê|ë|ē|ĕ|ė|ę|ě|е|ё|э/": "e";
+  "/Ф/": "F";
+  "/ƒ|ф/": "f";
+  "/Ĝ|Ğ|Ġ|Ģ|Г/": "G";
+  "/ĝ|ğ|ġ|ģ|г/": "g";
+  "/Ĥ|Ħ|Х/": "H";
+  "/ĥ|ħ|х/": "h";
+  "/Ì|Í|Î|Ï|Ĩ|Ī|Ĭ|Ǐ|Į|İ|И/": "I";
+  "/ì|í|î|ï|ĩ|ī|ĭ|ǐ|į|ı|и|i̇/": "i";
+  "/Ĵ|Й/": "J";
+  "/ĵ|й/": "j";
+  "/Ķ|К/": "K";
+  "/ķ|к/": "k";
+  "/Ĺ|Ļ|Ľ|Ŀ|Ł|Л/": "L";
+  "/ĺ|ļ|ľ|ŀ|ł|л/": "l";
+  "/М/": "M";
+  "/м/": "m";
+  "/Ñ|Ń|Ņ|Ň|Н/": "N";
+  "/ñ|ń|ņ|ň|ŉ|н/": "n";
+  "/Ò|Ó|Ô|Õ|Ō|Ŏ|Ǒ|Ő|Ơ|Ø|Ǿ|Ö|O/": "O";
+  "/ò|ó|ô|õ|ō|ŏ|ǒ|ő|ơ|ø|ǿ|º|ö|o|о/": "o";
+  "/П/": "P";
+  "/п/": "p";
+  "/Ŕ|Ŗ|Ř|Р/": "R";
+  "/ŕ|ŗ|ř|р/": "r";
+  "/Ś|Ŝ|Ş|Ș|Š|С/": "S";
+  "/ś|ŝ|ş|ș|š|ſ|с/": "s";
+  "/Ţ|Ț|Ť|Ŧ|Т/": "T";
+  "/ţ|ț|ť|ŧ|т/": "t";
+  "/Ù|Ú|Û|Ũ|Ū|Ŭ|Ů|Ű|Ų|Ư|Ǔ|Ǖ|Ǘ|Ǚ|Ǜ|У|Ü|U/": "U";
+  "/ù|ú|û|ũ|ū|ŭ|ů|ű|ų|ư|ǔ|ǖ|ǘ|ǚ|ǜ|у|ü|u/": "u";
+  "/В/": "V";
+  "/в/": "v";
+  "/Ý|Ÿ|Ŷ|Ы/": "Y";
+  "/ý|ÿ|ŷ|ы/": "y";
+  "/Ŵ/": "W";
+  "/ŵ/": "w";
+  "/Ź|Ż|Ž|З/": "Z";
+  "/ź|ż|ž|з/": "z";
+  "/Æ|Ǽ/": "AE";
+  "/ß/": "ss";
+  "/Ĳ/": "IJ";
+  "/ĳ/": "ij";
+  "/Œ/": "OE";
+  "/Ч/": "Ch";
+  "/ч/": "ch";
+  "/Ю/": "Ju";
+  "/ю/": "ju";
+  "/Я/": "Ja";
+  "/я/": "ja";
+  "/Ш/": "Sh";
+  "/ш/": "sh";
+  "/Щ/": "Shch";
+  "/щ/": "shch";
+  "/Ж/": "Zh";
+  "/ж/": "zh";
+};
+
+interface LinkTypes {
+  url: {
+    detect: (value) => boolean;
+    icon: "url";
+    id: "url";
+    label: string;
+    link: (value) => value;
+    placeholder: string;
+    input: "url";
+    value: (value: string) => string;
+  };
+  page: {
+    detect: (value: string) => boolean;
+    icon: "page";
+    id: "page";
+    label: string;
+    link: (value) => value;
+    placeholder: string;
+    input: "text";
+    value: (value) => value;
+  };
+  file: {
+    detect: (value: string) => boolean;
+    icon: "file";
+    id: "file";
+    label: string;
+    link: (value) => value;
+    placeholder: string;
+    value: (value) => value;
+  };
+  email: {
+    detect: (value: string) => boolean;
+    icon: "email";
+    id: "email";
+    label: string;
+    link: (value: string) => string;
+    placeholder: string;
+    input: "email";
+    value: (value: string) => string;
+  };
+  tel: {
+    detect: (value: string) => boolean;
+    icon: "phone";
+    id: "tel";
+    label: string;
+    link: (value: string) => string;
+    pattern: "[+]{0,1}[0-9]+";
+    placeholder: string;
+    input: "tel";
+    value: (value: string) => string;
+  };
+  anchor: {
+    detect: (value: string) => boolean;
+    icon: "anchor";
+    id: "anchor";
+    label: "Anchor";
+    link: (value: string) => string;
+    pattern: "^#.+";
+    placeholder: "#element";
+    input: "text";
+    value: (value: string) => string;
+  };
+  custom: {
+    detect: () => true;
+    icon: "title";
+    id: "custom";
+    label: string;
+    link: (value: string) => string;
+    input: "text";
+    value: (value: string) => string;
+  };
+}
+
+interface FileUploadParams {
+  url: string;
+  headers?: Record<string, string>;
+  method: string;
+  progress?: (event: ProgressEvent) => void;
+  success?: (xhr: XMLHttpRequest, file: File, response: any) => void;
+}
 
 declare module "vue" {
   interface ComponentCustomProperties {
@@ -22,6 +216,110 @@ declare module "vue" {
        * @returns the debounced function
        */
       debounce: (callback: () => any, delay: number) => () => any;
+      /**
+       * Resolves a color alias to proper css values
+       * @param color the color to resolve
+       * @returns the resolved color
+       * @example
+       * ```ts
+       * this.$helper.color("purple")
+       *
+       * // returns var(--color-purple-500)
+       * ```
+       */
+      color: (color: string) => string;
+      /**
+       *  Natural sort algorithm with unicode support based on @link github.com/bubkoo/natsort:
+       * @example
+       * ```ts
+       * const sorter = sort({
+       *   desc: direction === "desc",
+       *   insensitive: true
+       * });
+       * array.sort((a, b) => sorter(a, b)});
+       * ```
+       */
+      /**
+       * Uploads a file using XMLHttpRequest
+       * @param file the file to upload
+       * @param params the parameters for the upload
+       * @returns
+       */
+      upload: (file: File, params: FileUploadParams) => Promise<void>;
+      sort: (options: { insensitive?: boolean; desc?: boolean }) => {};
+      /**
+       * Returns a percentage string for the provided fraction
+       *
+       * @param {string} fraction fraction to convert to a percentage
+       * @param {string} fallback default value if fraction cannot be parsed
+       * @param {boolean} vertical Whether the fraction is applied to vertical or horizontal orientation
+       */
+      ratio: (fraction: string, fallback: string, vertical: boolean) => string;
+      /**
+       * Checks if provided event is an upload-related event:
+       * @param event the event to check
+       * @returns true if the event is an upload-related event, false otherwise
+       */
+      isUploadEvent: <T extends Event>(event: T) => boolean;
+      array: {
+        /**
+         * Creates an array from an object.
+         * @param obj the object to convert
+         * @template T the type of the object
+         * @returns an array of the object's values
+         */
+        fromObject: <T extends Record<string, any>>(
+          obj: T,
+        ) => Array<T[keyof T]>;
+        /**
+         *
+         * @param array the array to search in
+         * @param query the query to search for
+         * @param options the options for the search
+         * @param options.min the minimum length of the query to search for
+         * @param options.limit the maximum number of results to return
+         * @param options.field the field to search in
+         * @returns
+         */
+        search: <T extends Record<string, any>[]>(
+          array: T,
+          query: string,
+          options: {
+            min?: number;
+            limit?: number;
+            field?: keyof T[number];
+          },
+        ) => Array<T[number]>;
+        /**
+         *
+         * @param array the array to sort
+         * @param sortBy the field to sort by, can be in the format `field`, `field asc` or `field desc`
+         * @returns the sorted array
+         */
+        sortBy: <T extends Record<string, any>[]>(
+          array: T,
+          sortBy:
+            | `${keyof T[number]}`
+            | `${keyof T[number]} asc`
+            | `${keyof T[number]} desc`,
+        ) => T;
+        /**
+         * splits an array into groups by a delimiter entry
+         * @param array the array to split
+         * @param delimiter the delimiter to split by
+         * @returns an array of arrays
+         */
+        split: <T extends []>(
+          array: T,
+          delimiter: string,
+        ) => Array<Array<T[number]>>;
+        /**
+         * Wraps a value in an array (ensures the value will be an array)
+         * @param value the value to wrap
+         * @returns an array containing the value or the value itself if it is already an array
+         */
+        wrap: <T>(value: T | T[]) => T[];
+      };
       string: {
         /**
          * Converts a camelCase string to kebab-case.
@@ -83,7 +381,7 @@ declare module "vue" {
           str: string,
           rules?: Array<Record<string, string>>,
           allowed?: string,
-          separator?: string
+          separator?: string,
         ) => string;
         /**
          * Trims the given character(s) at the end of the string
@@ -130,6 +428,134 @@ declare module "vue" {
          * @returns true if the string contains an emoji, false otherwise
          */
         hasEmoji: (str: string) => boolean;
+      };
+      file: {
+        /**
+         * Extracts the extension
+         * @param filename
+         * @returns the file extension, e.g. "jpg", "png", "pdf"
+         */
+        extension: (filename: string) => string;
+        /**
+         * Extracts the filename without extension
+         * @param filename
+         * @returns the filename without extension
+         *
+         * @example
+         * ```ts
+         * this.$helper.file.name("image.jpg") // returns "image"
+         * ```
+         */
+        name: (filename: string) => string;
+        /**
+         * Creates a nice human-readable file size string with size unit:
+         * @returns a human-readable file size string, e.g. "1.5 MB", "200 KB"
+         */
+        niceSize: (size: number) => string;
+      };
+      embed: {
+        /**
+         * Builds a YouTube embed URL
+         * @param url the YouTube video URL
+         * @param doNotTrack if enabled, the embed will refer to the nocookie version of YouTube
+         * @returns the YouTube embed URL or false if invalid
+         */
+        youtube: (url: string, doNotTrack?: boolean) => string | false;
+        /**
+         * Builds a Vimeo embed URL
+         * @param url the Vimeo video URL
+         * @param doNotTrack if enabled, the embed will refer to the dnt (do not track) version of Vimeo
+         * @returns the Vimeo embed URL or false if invalid
+         */
+        vimeo: (url: string, doNotTrack?: boolean) => string | false;
+        /**
+         * Builds a generic video embed URL
+         * @param url the video URL
+         * @param doNotTrack if enabled, the embed will refer to the nocookie version of the video platform
+         * @returns the video embed URL or false if invalid
+         */
+        video: (url: string, doNotTrack?: boolean) => string | false;
+      };
+      link: {
+        /**
+         * Detects the type of a link
+         * @param link the link to detect
+         * @returns an object with the type of link and the resolved link
+         */
+        detect: (link: string) => {
+          type: keyof LinkTypes;
+          link: string;
+        };
+
+        /**
+         * Returns preview data for the link
+         * @param link the link to get preview data for
+         * @returns an object with the preview data
+         */
+        preview: (link: string) => {
+          label: string;
+        };
+        /**
+         * Returns the default types
+         */
+        types: () => LinkTypes;
+      };
+      object: {
+        /**
+         * Checks if value is empty
+         * @param value the value to check
+         * @returns true if the value is empty, false otherwise
+         */
+        isEmpty: <T extends Record<string, any>>(value: any) => boolean;
+        /**
+         * Checks if input is an object
+         * @param input the input to check
+         * @returns true if the input is an object, false otherwise
+         */
+        isObject: <T extends Record<string, any>>(input: any) => input is T;
+        /**
+         * Counts all keys in the object
+         * @param obj the object to count keys in
+         * @returns the number of keys in the object
+         */
+        count: <T extends Record<string, any>>(obj: T) => number;
+        /**
+         * Merges two objects
+         * @param target the target object
+         * @param source the source object
+         * @returns the merged object
+         */
+        merge: <T extends Record<string, any>, U extends Record<string, any>>(
+          target: T,
+          source: U,
+        ) => T & U;
+        /**
+         * Check if the objects are identical
+         * @param a the first object
+         * @param b the second object
+         * @returns true if the objects are identical, false otherwise
+         */
+        same: <T extends Record<string, any>, U extends Record<string, any>>(
+          a: T,
+          b: U,
+        ) => boolean;
+        /**
+         * Converts to lowercase all keys in an object
+         * @param obj the object to convert
+         * @returns the object with all keys in lowercase
+         */
+        toLowerKeys: <T extends Record<string, any>>(
+          obj: T,
+        ) => {
+          [K in keyof T as Lowercase<K>]: T[K];
+        };
+      };
+      keyboard: {
+        /**
+         * Returns name of meta key for current OS:
+         * @returns "Ctrl" for Windows/Linux, "Cmd" for macOS
+         */
+        metaKey: () => string;
       };
       field: {
         subfields: (field: any, fields: FieldsDefinition) => FieldsDefinition;
@@ -189,20 +615,20 @@ type FieldTypeToJsType<T extends FieldTypes | undefined> = T extends
   | "line"
   ? string
   : T extends "toggle"
-  ? boolean
-  : T extends "number" | "range"
-  ? number
-  : T extends "checkboxes" | "multiselect" | "tags"
-  ? string[] // Assuming array of strings, adjust if values can be numbers
-  : T extends "select" | "radio"
-  ? string | number // Value depends on options provided
-  : T extends "files" | "pages" | "users"
-  ? any[] // Array of specific structures, simplified
-  : T extends "structure" | "object"
-  ? Record<string, any> // Simplified object structure
-  : T extends "blocks" | "layout" | "list" | "writer" | "toggles"
-  ? any // Complex types, simplified
-  : unknown; // Fallback for unknown or undefined types
+    ? boolean
+    : T extends "number" | "range"
+      ? number
+      : T extends "checkboxes" | "multiselect" | "tags"
+        ? string[] // Assuming array of strings, adjust if values can be numbers
+        : T extends "select" | "radio"
+          ? string | number // Value depends on options provided
+          : T extends "files" | "pages" | "users"
+            ? any[] // Array of specific structures, simplified
+            : T extends "structure" | "object"
+              ? Record<string, any> // Simplified object structure
+              : T extends "blocks" | "layout" | "list" | "writer" | "toggles"
+                ? any // Complex types, simplified
+                : unknown; // Fallback for unknown or undefined types
 
 // --- Helper Type: Define the structure of a single field definition ---
 interface FieldDefinition {
@@ -284,6 +710,13 @@ interface RemoveDialogOptions
   };
 }
 
+interface TextDialogOptions {
+  component: "k-text-dialog";
+  props: {
+    text: string;
+  };
+}
+
 interface TextDrawerOptions {
   component: "k-text-drawer";
   props: {
@@ -334,6 +767,35 @@ declare global {
        * @returns the translation string
        */
       $t: (key: string, options?: Record<string, any>) => string;
+      user: {
+        id: string;
+        email: string;
+        language: keyof Locales;
+        role: string;
+        username: string;
+      };
+      system: {
+        /**
+         * Returns the site title.
+         */
+        title: string;
+        /**
+         * Returns the system locales
+         */
+        locales: Locales;
+        /**
+         * If true, the Panel assumes it is installed on a local environment
+         */
+        isLocal: boolean;
+        /**
+         * Returns the current CSRF token
+         */
+        csrf: string;
+        /**
+         * returns the ascii conversion table.
+         */
+        ascii: AsciiConversionTable;
+      };
       dialog: {
         /**
          * Opens a Kirby Panel dialog.
@@ -342,9 +804,38 @@ declare global {
          * @param options The dialog configuration object.
          */
         open: <F extends FieldsDefinition>( // Infer the specific Fields structure F
-          options: PanelDialogOptions<F> // Use the union type; TS will match against the specific variants
+          options: PanelDialogOptions<F>, // Use the union type; TS will match against the specific variants
         ) => Promise<void>; // Assuming it returns a Promise, adjust if needed
         close: () => void;
+      };
+      translation: {
+        direction: "ltr" | "rtl";
+        code: string;
+        name: string;
+        data: Record<string, string>;
+      };
+      languages: string[];
+      /**
+       * Global debug mode for Kirby Panel.
+       */
+      debug: boolean;
+      /**
+       * returns the current document title
+       */
+      title: string;
+      /**
+       * true if multiple languages can be installed
+       */
+      multilang: boolean;
+      config: {
+        /**
+         * Returns the current debug mode. Use `window.panel.debug` as a shortcut.
+         */
+        debug: boolean;
+        /**
+         * If true, the textarea will insert code as kirbytext instead of markdown.
+         */
+        kirbytext: boolean;
       };
       // Add other panel properties/methods if needed
       drawer: {
@@ -356,17 +847,19 @@ declare global {
          * @returns
          */
         open: <F extends FieldsDefinition>(
-          options: PanelDrawerOptions<F>
+          options: PanelDrawerOptions<F>,
         ) => Promise<void>;
         close: () => void;
       };
       plugin: (
         name: string,
         options: {
-          fields: Record<string, Component>;
-        }
+          fields?: Record<string, Component | string>;
+          blocks?: Record<string, Component | string>;
+        },
       ) => void;
     };
   }
 }
+
 export {};

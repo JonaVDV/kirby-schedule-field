@@ -9,7 +9,7 @@ use Kirby\Toolkit\A;
 use Kirby\Toolkit\Str;
 
 load([
-    'IMA\\KirbyScheduleField\\Methods\\FieldMethods' => __DIR__ . '/methods/fieldMethods.php',
+    'Jvdv\\ScheduleField\\EventsCollection' => __DIR__ . '/lib/events.php',
 ]);
 
 Kirby::plugin('IMA/kirby-schedule-field', [
